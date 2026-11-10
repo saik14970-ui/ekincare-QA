@@ -1,0 +1,406 @@
+{
+ "channels": {
+  "Voice": {
+   "tx": "Mobile Number",
+   "params": [
+    {
+     "k": "Customer Authentication / Validation / Verification",
+     "max": 10,
+     "opts": [
+      "Y",
+      "Fatal",
+      "N"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Opening & Closing",
+     "max": 5,
+     "opts": [
+      "5",
+      "2",
+      "0"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Brand Image Building",
+     "max": 5,
+     "opts": [
+      "Y",
+      "Fatal",
+      "NA"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Politeness",
+     "max": 15,
+     "opts": [
+      "Y",
+      "Fatal",
+      "N"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Active Listening & Acknowledgement",
+     "max": 5,
+     "opts": [
+      "5",
+      "2",
+      "0"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Empathy & Apology",
+     "max": 5,
+     "opts": [
+      "Y",
+      "N",
+      "NA"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Language & Communication",
+     "max": 5,
+     "opts": [
+      "5",
+      "2",
+      "0"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Hold/ Transfer Courtesy",
+     "max": 5,
+     "opts": [
+      "5",
+      "0",
+      "-5",
+      "NA",
+      "Fatal"
+     ]
+    },
+    {
+     "k": "Query Resolution / Probing",
+     "max": 5,
+     "opts": [
+      "Y",
+      "N",
+      "NA"
+     ]
+    },
+    {
+     "k": "Query Resolution / Providing alternatives",
+     "max": 5,
+     "opts": [
+      "Y",
+      "N",
+      "NA"
+     ]
+    },
+    {
+     "k": "Query Resolution / FTR",
+     "max": 20,
+     "opts": [
+      "Y",
+      "Fatal"
+     ]
+    },
+    {
+     "k": "Tagging / Tagging",
+     "max": 15,
+     "opts": [
+      "Y",
+      "Fatal",
+      "N"
+     ]
+    }
+   ]
+  },
+  "Chats": {
+   "tx": "Chat ID",
+   "params": [
+    {
+     "k": "Call Etiquette / Opening / Closing",
+     "max": 5,
+     "opts": [
+      "Y",
+      "Fatal",
+      "N"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Personalization",
+     "max": 5,
+     "opts": [
+      "5",
+      "0"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Empathy & Apology",
+     "max": 5,
+     "opts": [
+      "5",
+      "0",
+      "NA"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Relevant Probing",
+     "max": 5,
+     "opts": [
+      "5",
+      "0",
+      "NA"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Data Protection",
+     "max": 10,
+     "opts": [
+      "Y",
+      "Fatal",
+      "NA"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Hold Procedure",
+     "max": 5,
+     "opts": [
+      "5",
+      "0",
+      "-5",
+      "NA"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Written communication",
+     "max": 5,
+     "opts": [
+      "5",
+      "2",
+      "0"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Politeness and Friendliness",
+     "max": 10,
+     "opts": [
+      "Y",
+      "Fatal"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Confidence Building",
+     "max": 5,
+     "opts": [
+      "5",
+      "0",
+      "NA"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Brand Image Building",
+     "max": 5,
+     "opts": [
+      "Y",
+      "Fatal"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Attentiveness",
+     "max": 5,
+     "opts": [
+      "5",
+      "0"
+     ]
+    },
+    {
+     "k": "Query Resolution / FTR",
+     "max": 20,
+     "opts": [
+      "Y",
+      "Fatal"
+     ]
+    },
+    {
+     "k": "Query Resolution / Providing Alternatives",
+     "max": 5,
+     "opts": [
+      "5",
+      "0",
+      "NA"
+     ]
+    },
+    {
+     "k": "Tagging / Documentation",
+     "max": 10,
+     "opts": [
+      "Y",
+      "Fatal",
+      "N"
+     ]
+    }
+   ]
+  },
+  "Emails": {
+   "tx": "Ticket ID",
+   "params": [
+    {
+     "k": "Call Etiquette / Opening / Closing",
+     "max": 5,
+     "opts": [
+      "5",
+      "0"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Empathy & Apology",
+     "max": 5,
+     "opts": [
+      "5",
+      "0",
+      "NA"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Relevant Probing",
+     "max": 5,
+     "opts": [
+      "5",
+      "0",
+      "NA"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Data Protection",
+     "max": 15,
+     "opts": [
+      "Y",
+      "Fatal"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Brand Image Building",
+     "max": 5,
+     "opts": [
+      "Y",
+      "Fatal"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Politeness and Friendliness",
+     "max": 10,
+     "opts": [
+      "Y",
+      "Fatal",
+      "N"
+     ]
+    },
+    {
+     "k": "Call Etiquette / Written communication",
+     "max": 10,
+     "opts": [
+      "10",
+      "5",
+      "0"
+     ]
+    },
+    {
+     "k": "Query Resolution / FTR",
+     "max": 20,
+     "opts": [
+      "Y",
+      "Fatal"
+     ]
+    },
+    {
+     "k": "Query Resolution / Providing Alternatives",
+     "max": 10,
+     "opts": [
+      "10",
+      "0",
+      "NA"
+     ]
+    },
+    {
+     "k": "Tagging / Documentation",
+     "max": 15,
+     "opts": [
+      "Y",
+      "Fatal",
+      "N"
+     ]
+    }
+   ]
+  }
+ },
+ "serviceLines": [
+  "AHC- Home Collections",
+  "AHC- Inclinic",
+  "Ambulance",
+  "Claims/Reimbursement/Policy",
+  "Dental",
+  "Gyms",
+  "Inclinic Consultation",
+  "Individual Lab Test",
+  "ISOS Consultation",
+  "Medicine",
+  "XOXO Day",
+  "Onsites",
+  "Specialist Consults",
+  "Tech Related",
+  "Vaccination - Center Visit",
+  "Vaccination - Home Visit",
+  "Vision HC",
+  "Vision Wearables"
+ ],
+ "training": [
+  [
+   "Authentication|Data Protection",
+   "Data security, validation and compliance refresher"
+  ],
+  [
+   "Opening|Brand",
+   "Opening/closing scripts and brand etiquette"
+  ],
+  [
+   "Politeness",
+   "Tone, politeness and customer handling"
+  ],
+  [
+   "Listening|Attentiveness",
+   "Active listening and attentiveness"
+  ],
+  [
+   "Empathy",
+   "Empathy and apology training"
+  ],
+  [
+   "Language|Written",
+   "Communication and written-language skills"
+  ],
+  [
+   "Hold",
+   "Hold/transfer procedure refresher"
+  ],
+  [
+   "Probing",
+   "Probing and query-understanding skills"
+  ],
+  [
+   "Alternatives",
+   "Solution options and product knowledge"
+  ],
+  [
+   "FTR",
+   "Resolution and ownership training"
+  ],
+  [
+   "Tagging|Documentation",
+   "Documentation and CRM tagging training"
+  ],
+  [
+   "Personalization|Confidence",
+   "Personalization and confidence building"
+  ]
+ ]
+}

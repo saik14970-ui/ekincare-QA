@@ -1,0 +1,181 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>ekincare AI Auditor</title>
+<style>
+:root{--navy:#0b2a5b;--blue:#0a5bd3;--lb:#eaf3ff;--teal:#12a5a0;--g:#1e9e5a;--a:#d99a00;--r:#d64545;--bd:#d9e3f2;--tx:#14284b;--mut:#5d6f8c;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#f5f9ff;color:var(--tx)}
+.login{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#eaf3ff,#cfe5ff 60%,#9fd0ff);padding:16px}
+.lw{display:grid;grid-template-columns:1.1fr 1fr;max-width:900px;width:100%;gap:24px;align-items:center}
+.hero h1{font-size:44px;margin:8px 0 4px;color:var(--navy)}.hero p{color:var(--mut);font-size:16px}
+.box{background:#fff;border-radius:16px;padding:28px;box-shadow:0 10px 30px #0a5bd322}
+.logo{display:flex;align-items:center;gap:8px;font-size:26px;font-weight:700;color:var(--navy)}
+input,select,textarea{width:100%;padding:9px 11px;border:1px solid var(--bd);border-radius:8px;font:inherit;background:#fff;color:var(--tx)}
+label{display:block;font-size:12px;color:var(--mut);margin:10px 0 3px}
+button{font:inherit;border:0;border-radius:8px;padding:9px 16px;cursor:pointer;background:var(--blue);color:#fff;font-weight:600}
+button.s{background:#fff;color:var(--blue);border:1px solid var(--bd)}button.d{background:var(--r)}button:disabled{opacity:.5}
+.app{display:grid;grid-template-columns:200px 1fr;min-height:100vh}
+nav{background:#fff;border-right:1px solid var(--bd);padding:14px 10px}nav a{display:block;padding:9px 12px;border-radius:8px;color:var(--tx);cursor:pointer;margin:2px 0}
+nav a.on{background:var(--lb);color:var(--blue);font-weight:600}
+main{padding:20px;min-width:0}h2{margin:0 0 14px;color:var(--navy)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.card{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:14px}.card b{display:block;font-size:24px;color:var(--navy)}.card span{color:var(--mut);font-size:12px}
+.pan{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:16px}
+.tw{overflow:auto;max-height:70vh;border:1px solid var(--bd);border-radius:10px;background:#fff}
+table{border-collapse:collapse;width:100%}th,td{padding:8px 10px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
+th{background:var(--lb);position:sticky;top:0;z-index:2;color:var(--navy);font-size:12px}
+.mx td:nth-child(-n+2),.mx th:nth-child(-n+2){position:sticky;background:#fff;z-index:1}.mx th:nth-child(-n+2){background:var(--lb);z-index:3}
+.mx td:first-child,.mx th:first-child{left:0;min-width:80px}.mx td:nth-child(2),.mx th:nth-child(2){left:80px;min-width:150px}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer}
+.Good{background:#dff5e8;color:var(--g)}.Neutral{background:#fff2cc;color:#9a6c00}.Bad{background:#fde1e1;color:var(--r)}.NA{background:#eef1f5;color:#8793a6}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.row>div{flex:1;min-width:140px}
+.bar{height:10px;background:var(--lb);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--teal)}
+.mut{color:var(--mut)}.err{color:var(--r);margin-top:8px}
+@media(max-width:760px){.lw{grid-template-columns:1fr}.hero{display:none}.app{grid-template-columns:1fr}nav{display:flex;overflow:auto;border-right:0;border-bottom:1px solid var(--bd)}}
+</style></head><body><div id="root"><p style="padding:20px">Loading…</p></div>
+<script>
+let SL,P,PR,CFGS={};
+async function api(m,u,b){const r=await fetch(u,{method:m,headers:{"Content-Type":"application/json"},body:b?JSON.stringify(b):undefined,credentials:"same-origin"});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||"Request failed");return j}
+async function load(){const d=await api("GET","/api/data");S.users=d.users||[];S.agents=d.agents||[];S.audits=d.audits||[];S.cfg={...S.cfg,...d.cfg};S.mail=d.mail||[];S.log=d.log||[]}
+const db={doc:p=>({set:d=>api("PUT","/api/doc/"+p,d).then(load).then(render),update:d=>api("PUT","/api/doc/"+p,d).then(load).then(render)})};
+const dl={save:({filename,data})=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type:"text/csv"}));a.download=filename;a.click();return Promise.resolve()}};
+const W=l=>{const s=l.reduce((t,x)=>t+x.sc,0);return s?l.reduce((t,x)=>t+x.earned,0)/s*100:null};
+const fmt=v=>v==null?"N/A":v.toFixed(1)+"%";
+const trainFor=k=>(CFGS.training.find(t=>new RegExp(t[0],"i").test(k))||[0,"SOP and process adherence training"])[1];
+function pareto(rows){const m={};rows.forEach(k=>m[k]=(m[k]||0)+1);const en=Object.entries(m).sort((a,b)=>b[1]-a[1]),t=rows.length;let c=0;
+return`<div class="tw" style="max-height:300px"><table><tr><th>Item</th><th>Count</th><th>%</th><th>Cumulative %</th><th style="min-width:140px"></th></tr>${en.map(([k,v])=>{c+=v;return`<tr><td>${e(k)}</td><td>${v}</td><td>${(v/t*100).toFixed(1)}</td><td>${(c/t*100).toFixed(1)}</td><td><div class="bar"><i style="width:${v/en[0][1]*100}%"></i></div></td></tr>`}).join("")||'<tr><td colspan="5" class="mut">No data in this period</td></tr>'}</table></div>`}
+const wk=d=>{const t=new Date(d+"T00:00:00Z");t.setUTCDate(t.getUTCDate()-((t.getUTCDay()+6)%7));return t.toISOString().slice(0,10)};
+function trendT(a,f,title){const g={};a.forEach(x=>(g[f(x)]=g[f(x)]||[]).push(x));
+return`<h4>${title}</h4><div class="tw" style="max-height:260px"><table><tr><th>Period</th><th>Audits</th><th>Quality</th><th style="min-width:160px"></th><th>Fatal</th><th>Non-Fatal</th></tr>${Object.keys(g).sort().map(k=>{const q=W(g[k]);return`<tr><td>${k}</td><td>${g[k].length}</td><td>${fmt(q)}</td><td><div class="bar"><i style="width:${q||0}%"></i></div></td><td>${g[k].reduce((t,x)=>t+x.f,0)}</td><td>${g[k].reduce((t,x)=>t+x.nf,0)}</td></tr>`}).join("")||'<tr><td colspan="6" class="mut">No data</td></tr>'}</table></div>`}
+function agg(a){const m={};a.forEach(x=>{(m[x.emp]=m[x.emp]||{id:x.emp,n:x.empName,l:[]}).l.push(x)});
+return Object.values(m).map(g=>{g.q=W(g.l);g.fa=g.l.filter(x=>x.f).length;g.er={};g.l.flatMap(x=>x.errs||[]).forEach(r=>g.er[r.k]=(g.er[r.k]||0)+1);
+const s=g.l.slice().sort((p,q)=>p.ts-q.ts),h=Math.floor(s.length/2);g.dec=s.length>=4&&W(s.slice(0,h))-W(s.slice(h))>=5;return g})}
+const KP=(arr)=>`<div class="cards">${arr.map(c=>`<div class="card"><b>${c[1]}</b><span>${c[0]}</span></div>`).join("")}</div>`;
+function dash(){const a=vis(),n=a.length,t=k=>a.reduce((s,x)=>s+x[k],0),pc=v=>n?(v/n*100).toFixed(1)+"%":"N/A",C=S.cfg,G=agg(a).sort((x,y)=>y.q-x.q);
+const fl=a.flatMap(x=>(x.errs||[]).filter(r=>r.f).map(r=>({...r,x}))),nl=a.flatMap(x=>(x.errs||[]).filter(r=>!r.f).map(r=>({...r,x})));
+const chR=Object.keys(P).map(c=>{const b=a.filter(x=>x.ch===c),q=W(b),f=b.filter(x=>x.f).length,nf=b.filter(x=>x.nf).length;return`<tr><td>${c}</td><td>${b.length}</td><td style="min-width:170px">${q==null?"N/A":`<div class="bar"><i style="width:${q}%"></i></div>${fmt(q)}`}</td><td>${b.length?(f/b.length*100).toFixed(1)+"%":"N/A"}</td><td>${b.length?(nf/b.length*100).toFixed(1)+"%":"N/A"}</td></tr>`}).join("");
+const tag=g=>g.q<C.neu||g.fa>=2?'<span class="pill Bad">Immediate coaching</span>':g.dec?'<span class="pill Neutral">Declining trend</span>':g.q>=C.good?'<span class="pill Good">Top performer</span>':'<span class="pill NA">Consistent</span>';
+const rep=G.filter(g=>g.fa>=2),repN=G.filter(g=>Object.values(g.er).some(v=>v>=3));
+const tr=G.filter(g=>Object.keys(g.er).length).map(g=>{const top=Object.entries(g.er).sort((p,q)=>q[1]-p[1]).slice(0,2);return`<tr><td>${e(g.id)}</td><td>${e(g.n)}</td><td style="white-space:normal">${top.map(([k,v])=>e(k)+" ("+v+")").join("; ")}</td><td style="white-space:normal">${[...new Set(top.map(([k])=>trainFor(k)))].join("; ")}</td></tr>`}).join("");
+const H=(x)=>`<h3 style="margin-top:22px;color:var(--navy)">${x}</h3>`;
+return`<h2>${S.me.role==="auditor"?"My Dashboard":"Main QA Analytics Dashboard"}</h2>${filt()}
+${H("A. Overall Performance")}${KP([["Total Audits",n],["Agents Audited",G.length],["Average Quality Score",fmt(W(a))],["Fatal Error %",pc(a.filter(x=>x.f).length)],["Non-Fatal Error %",pc(a.filter(x=>x.nf).length)],["Audits Below Target (<"+C.neu+"%)",a.filter(x=>x.score<C.neu).length],["Audits with 0% Score",a.filter(x=>x.score===0).length],["Audits with 100% Score",a.filter(x=>x.score>=99.999).length]])}
+${H("B. Channel-Wise Performance")}<div class="tw"><table><tr><th>Channel</th><th>Audit Volume</th><th>Quality Score</th><th>Fatal Error %</th><th>Non-Fatal Error %</th></tr>${chR}</table></div>
+${H("C. Agent Performance Leaderboard")}<div class="tw"><table><tr><th>Rank</th><th>Emp ID</th><th>Emp Name</th><th>Audits</th><th>Quality</th><th>Fatal Audits</th><th>Status</th></tr>${G.map((g,i)=>`<tr><td>${i+1}</td><td>${e(g.id)}</td><td>${e(g.n)}</td><td>${g.l.length}</td><td>${fmt(g.q)}</td><td>${g.fa}</td><td>${tag(g)}</td></tr>`).join("")||'<tr><td colspan="7" class="mut">No audits in this period</td></tr>'}</table></div>
+<p class="mut">Repeated fatal errors (2+ fatal audits): ${rep.map(g=>e(g.n)+" ("+g.fa+")").join(", ")||"None"}<br>Repeated non-fatal mistakes (same parameter 3+ times): ${repN.map(g=>e(g.n)).join(", ")||"None"}<br>Declining quality trend: ${G.filter(g=>g.dec).map(g=>e(g.n)).join(", ")||"None"}</p>
+${H("D. Fatal Error Analysis (Pareto)")}<div class="row"><div><b>By parameter</b>${pareto(fl.map(r=>r.k))}</div><div><b>By channel</b>${pareto(fl.map(r=>r.x.ch))}</div></div><div class="row" style="margin-top:10px"><div><b>By agent</b>${pareto(fl.map(r=>r.x.empName))}</div><div><b>By auditor</b>${pareto(fl.map(r=>r.x.auditor))}</div></div>
+${H("E. Non-Fatal Error Analysis (Pareto)")}<div class="row"><div><b>By parameter</b>${pareto(nl.map(r=>r.k))}</div><div><b>By channel</b>${pareto(nl.map(r=>r.x.ch))}</div></div>
+${H("F. Training & Improvement Analysis")}<p class="mut">Recommendations are generated from the actual fatal / non-fatal parameters recorded in each agent’s audits.</p><div class="row"><div><b>Training need (all errors)</b>${pareto(a.flatMap(x=>(x.errs||[]).map(r=>trainFor(r.k))))}</div></div><div class="tw" style="margin-top:10px"><table><tr><th>Emp ID</th><th>Emp Name</th><th>Top error areas</th><th>Recommended training</th></tr>${tr||'<tr><td colspan="4" class="mut">No errors recorded</td></tr>'}</table></div>
+${H("G. Trend Analysis")}${trendT(a,x=>x.auditDate,"Daily")}${trendT(a,x=>wk(x.auditDate),"Weekly (week starting Monday)")}${trendT(a,x=>x.auditDate.slice(0,7),"Monthly")}${Object.keys(P).map(c=>trendT(a.filter(x=>x.ch===c),x=>x.auditDate.slice(0,7),"Monthly – "+c)).join("")}`}
+function scard(){const a=vis(),n=a.length,t=k=>a.reduce((s,x)=>s+x[k],0),pc=v=>n?(v/n*100).toFixed(1)+"%":"N/A";
+const tabs=[["kpi","Overall QA Performance"],["ag","Agent-wise Audit Details"],["fe","Fatal & Non-Fatal Errors"]];let body="";
+let b=a.filter(x=>(!S.chf||x.ch===S.chf)&&(!S.q2||JSON.stringify([x.emp,x.empName,x.tx,x.auditor]).toLowerCase().includes(S.q2.toLowerCase())));
+if(S.sct==="kpi")body=KP([["Total Audits",n],["Total Agents",new Set(a.map(x=>x.emp)).size],["Total Fatal (occurrences)",t("f")],["Fatal Error % (audits)",pc(a.filter(x=>x.f).length)],["Total Non-Fatal (occurrences)",t("nf")],["Non-Fatal Error % (audits)",pc(a.filter(x=>x.nf).length)],["Overall Quality Score",fmt(W(a))]])+`<p class="mut">Quality score = total points earned ÷ total scorable points (fatal audits earn 0). Fatal and non-fatal % count audits containing at least one such error; totals count every occurrence.</p>`;
+else{if(S.sct==="fe"){b=b.filter(x=>x.f||x.nf);if(S.ef==="f")b=b.filter(x=>x.f);if(S.ef==="n")b=b.filter(x=>x.nf)}
+const H=S.sct==="ag"?["Emp ID","Emp Name","Channel","Transaction ID","Auditor Name","Disposition","Quality Score"]:["Emp ID","Emp Name","Channel","Auditor Name","Fatal Reason","Non-Fatal Reason","Quality Score"];
+const R=x=>S.sct==="ag"?[x.emp,x.empName,x.ch,x.tx,x.auditor,x.disp,x.score.toFixed(1)+"%"]:[x.emp,x.empName,x.ch,x.auditor,x.fr,x.nfr,x.score.toFixed(1)+"%"];
+window._exs=()=>csv([H,...b.map(R)],S.sct==="ag"?"agent-wise-audits.csv":"fatal-nonfatal-errors.csv");
+const d=S.audDet&&a.find(x=>x.id===S.audDet);
+body=`<div class="pan row"><div><label>Channel</label><select onchange="S.chf=this.value;render()"><option value="">All</option>${Object.keys(P).map(c=>`<option ${S.chf===c?"selected":""}>${c}</option>`).join("")}</select></div>${S.sct==="fe"?`<div><label>Error type</label><select onchange="S.ef=this.value;render()"><option value="">Fatal + Non-fatal</option><option value="f" ${S.ef==="f"?"selected":""}>Fatal only</option><option value="n" ${S.ef==="n"?"selected":""}>Non-fatal only</option></select></div>`:""}<div><label>Search Emp ID / name / transaction ID</label><input value="${e(S.q2)}" onchange="S.q2=this.value;render()"></div><div style="flex:0"><button onclick="_exs()">Export CSV</button></div></div>
+${d?`<div class="pan"><b>${e(d.id)} · ${e(d.empName)} · ${d.ch} · ${e(d.tx)} · ${d.score.toFixed(1)}%</b> <button class="s" style="float:right" onclick="S.audDet=null;render()">Close</button><p class="mut">Service line: ${e(d.svc)} · Auditor: ${e(d.auditor)} · Audit date: ${d.auditDate} · Remarks: ${e(d.rem)||"–"}</p><div class="tw" style="max-height:300px"><table><tr><th>Parameter</th><th>Observation</th><th>Reason</th></tr>${Object.entries(d.res).map(([k,v])=>`<tr><td>${e(k)}</td><td>${e(v[0])}</td><td style="white-space:normal">${e(v[1])}</td></tr>`).join("")}</table></div></div>`:""}
+<div class="tw"><table><tr>${H.map(h=>`<th>${h}</th>`).join("")}</tr>${b.map(x=>`<tr style="cursor:pointer" onclick="S.audDet='${x.id}';render()">${R(x).map((v,i)=>`<td style="${S.sct==="fe"&&(i===4||i===5)?"white-space:normal;min-width:240px":""}">${e(v)}</td>`).join("")}</tr>`).join("")||`<tr><td colspan="7" class="mut">No records for the selected filters.</td></tr>`}</table></div>`}
+return`<h2>Scorecard</h2>${filt()}<div class="row" style="margin-bottom:14px">${tabs.map(x=>`<div style="flex:0"><button class="${S.sct===x[0]?"":"s"}" onclick="S.sct='${x[0]}';S.audDet=null;render()">${x[1]}</button></div>`).join("")}</div>${body}`}
+function set(){const c=S.cfg,tb=(rows,h)=>`<div class="tw" style="max-height:300px"><table><tr>${h.map(x=>`<th>${x}</th>`).join("")}</tr>${rows.map(r=>`<tr>${r.map(v=>`<td>${e(v)}</td>`).join("")}</tr>`).join("")||`<tr><td colspan="${h.length}" class="mut">Nothing logged yet</td></tr>`}</table></div>`;
+return`<h2>Admin Settings & Logs</h2><div class="pan"><label style="color:var(--tx)"><input type="checkbox" style="width:auto" ${c.notify!==false?"checked":""} onchange="db.doc('settings/cfg').update({notify:this.checked})"> Send automatic emails to agents for 0% and 100% quality scores</label>
+<p class="mut">Microsoft Graph email: ${CFGS.mail?"configured":"not configured – set TENANT_ID, CLIENT_ID, CLIENT_SECRET and MAIL_SENDER in the .env file"} · Microsoft sign-in: ${CFGS.ms?"enabled":"not configured"}</p>
+<button onclick="eodNow()">Send today’s EOD summary now</button> <span id="eodr" class="mut"></span></div>
+<h3>Email delivery log</h3>${tb(S.mail.map(m=>[new Date(m.ts).toLocaleString(),m.rcpt,m.subj,m.status,m.err]),["Time","To","Subject","Status","Error"])}<h3>Activity log</h3>${tb(S.log.map(m=>[new Date(m.ts).toLocaleString(),m.who,m.act,m.info]),["Time","User","Action","Details"])}`}
+async function eodNow(){try{const r=await api("POST","/api/eod");document.getElementById("eodr").textContent="Result: "+r.result;await load()}catch(x){document.getElementById("eodr").textContent=x.message}}
+function render(){const r=document.getElementById("root");
+if(!S.me){r.innerHTML=loginHTML();return}
+const m=S.me,nv=[["dash","Dashboard"]];
+if(m.role!=="auditor")nv.push(["sc","Scorecard"],["mx","Agent × Service Line"]);
+nv.push(["audit","New Audit"],["raw","Audit Records"]);
+if(m.role==="admin")nv.push(["agents","Agent Master"],["users","Access Management"],["set","Settings & Logs"]);
+r.innerHTML=`<div class="app"><nav><div class="logo" style="font-size:20px">${LOGO}ekincare</div><p class="mut" style="margin:8px 12px">${e(m.name)}<br>${e(m.role.toUpperCase())}</p>${nv.map(n=>`<a class="${S.view===n[0]?"on":""}" onclick="go('${n[0]}')">${n[1]}</a>`).join("")}<a onclick="chpw()">Change Password</a><a onclick="logout()">Sign out</a></nav><main>${({dash,sc:scard,audit,raw,mx,agents,users,set})[S.view]()}</main></div>`}
+async function login(){const em=document.getElementById("em").value.trim().toLowerCase(),pw=document.getElementById("pw").value;
+if(!em||pw.length<(CFGS.setup?8:1)){S.msg="Enter your email and password (8+ characters when creating the admin)";return render()}
+try{await api("POST",CFGS.setup?"/api/setup":"/api/login",{email:em,password:pw});S.me=await api("GET","/api/me");CFGS.setup=false;await load();S.msg="";S.view="dash"}catch(x){S.msg=x.message}render()}
+async function chpw(){const o=prompt("Current password");if(o===null)return;const n=prompt("New password (8+ characters)");if(!n)return;try{await api("POST","/api/password",{old:o,pw:n});alert("Password changed")}catch(x){alert(x.message)}}
+async function rpw(em){const n=prompt("New temporary password for "+em+" (8+ characters)");if(!n)return;try{await db.doc("users/"+sid(em)).update({password:n});alert("Password reset. Share it with the user.")}catch(x){alert(x.message)}}
+async function logout(){await api("POST","/api/logout").catch(()=>{});S.me=null;S.audits=[];S.users=[];render()}
+const e=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const sid=s=>s.toLowerCase().replace(/[^a-z0-9]/g,"_");
+const hash=async(em,pw)=>[...new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode("ek:"+em.toLowerCase()+":"+pw)))].map(b=>b.toString(16).padStart(2,"0")).join("");
+const S={users:[],agents:[],audits:[],mail:[],log:[],cfg:{good:90,neu:80,min:1,notify:true},me:null,view:"dash",from:"",to:"",det:null,msg:"",sct:"kpi",q2:"",chf:"",ef:"",audDet:null,q:""};
+const LOGO='<svg width="34" height="34" viewBox="0 0 34 34"><rect x="12" y="2" width="10" height="30" rx="4" fill="#12a5a0"/><rect x="2" y="12" width="30" height="10" rx="4" fill="#0a5bd3"/></svg>';
+function calc(ch,res){let ea=0,sc=0,f=0,nf=0;for(const p of PR[ch]){const o=(res[p.k]||[])[0];if(o==="NA")continue;sc+=p.max;if(o==="Fatal"){f++;continue}const v=o==="Y"?p.max:o==="N"?0:+o;ea+=v;if(v<p.max)nf++}
+const earned=f?0:Math.max(0,ea);return{score:sc?earned/sc*100:0,earned,sc,f,nf}}
+function vis(){const m=S.me,A=S.audits;let a=m.role==="admin"?A:m.role==="tl"?A:A.filter(x=>x.aEmail===m.email);
+return a.filter(x=>(!S.from||x.auditDate>=S.from)&&(!S.to||x.auditDate<=S.to))}
+function csv(rows,name){const t=rows.map(r=>r.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\n");
+if(dl)dl.save({filename:name,data:t}).catch(()=>{});else alert("Download is not available in this view.")}
+function go(v){S.view=v;S.det=null;render()}
+function loginHTML(){const first=CFGS.setup;
+return `<div class="login"><div class="lw"><div class="hero"><div class="logo">${LOGO}ekincare</div><h1>AI Auditor</h1><p><b>Audit. Analyze. Improve.</b><br>Smarter insights for better customer experience and quality.</p></div>
+<div class="box"><div class="logo" style="justify-content:center">${LOGO}ekincare</div><h2 style="text-align:center;margin:10px 0 4px">${first?"Create Super Admin":"Auditors Login"}</h2>
+<p class="mut" style="text-align:center;margin:0 0 6px">${first?"First-time setup: choose a password for the admin account":"Sign in to access the AI Auditor dashboard"}</p>
+<label>Email ID</label><input id="em" type="email" value="${first?"saikiran.k@ekincare.com":""}" autocomplete="username"><label>Password</label><input id="pw" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
+<p style="text-align:right;margin:8px 0 0"><a href="#" onclick="alert('Please contact the QA admin to reset your password.');return false" style="color:var(--blue);font-size:13px">Forgot Password?</a></p><p class="err" id="lerr">${e(S.msg)}</p><button style="width:100%;margin-top:10px" onclick="login()">${first?"Create & Sign In":"Sign In"}</button>
+<p class="mut" style="text-align:center;margin:12px 0 6px">or</p>${CFGS.ms?`<a href="/auth/microsoft"><button class="s" style="width:100%">Sign in with Microsoft</button></a>`:`<button class="s" style="width:100%" disabled title="Ask IT to configure Microsoft Entra in .env">Sign in with Microsoft (not configured)</button>`}</div></div></div>`}
+function filt(){return`<div class="pan row"><div><label>From Date</label><input type="date" value="${S.from}" onchange="S.from=this.value;render()"></div><div><label>To Date</label><input type="date" value="${S.to}" onchange="S.to=this.value;render()"></div></div>`}
+function raw(){const a=vis().sort((x,y)=>y.ts-x.ts),q=S.q||"";const b=a.filter(x=>!q||JSON.stringify([x.emp,x.empName,x.tx,x.ch,x.auditor]).toLowerCase().includes(q.toLowerCase()));
+const H=["Audit ID","Audit Date","Submitted","Channel","Emp ID","Emp Name","TL","Transaction ID","Service Line","Disposition","Auditor","Score %","Fatal Reason","Non-Fatal Reason","Remarks"];
+const R=x=>[x.id,x.auditDate,new Date(x.ts).toLocaleString(),x.ch,x.emp,x.empName,x.tl,x.tx,x.svc,x.disp,x.auditor,x.score.toFixed(1),x.fr,x.nfr,x.rem];
+window._exp=()=>csv([H,...b.map(R)],"audit-records.csv");
+return`<h2>Audit Records</h2>${filt()}<div class="row" style="margin-bottom:10px"><div><input placeholder="Search Emp ID, name, transaction ID…" value="${e(q)}" onchange="S.q=this.value;render()"></div><div style="flex:0"><button onclick="_exp()">Export CSV</button></div></div>
+<div class="tw"><table><tr>${H.map(h=>`<th>${h}</th>`).join("")}</tr>${b.map(x=>`<tr>${R(x).map(v=>`<td>${e(v)}</td>`).join("")}</tr>`).join("")||`<tr><td colspan="15" class="mut">No audits in this period.</td></tr>`}</table></div>`}
+function audit(){const m=S.me,chs=Object.keys(P).filter(c=>m.role==="admin"||(m.ch||[]).includes(c)),c=S.ch&&chs.includes(S.ch)?S.ch:chs[0];
+if(!c)return`<h2>New Audit</h2><p class="mut">No channels are assigned to you. Please contact the admin.</p>`;
+const ag=S.agents.filter(x=>x.active),t=new Date().toISOString().slice(0,10);
+return`<h2>New Audit</h2><div class="pan"><div class="row"><div><label>Channel</label><select onchange="S.ch=this.value;render()">${chs.map(x=>`<option ${x===c?"selected":""}>${x}</option>`).join("")}</select></div>
+<div><label>Agent</label><select id="f_emp"><option value="">Select agent</option>${ag.map(x=>`<option value="${e(x.id)}">${e(x.id)} – ${e(x.name)}</option>`).join("")}</select></div>
+<div><label>${P[c].tx} *</label><input id="f_tx"></div><div><label>Service Line *</label><select id="f_svc"><option value="">Select</option>${SL.map(x=>`<option>${x}</option>`).join("")}</select></div></div>
+<div class="row"><div><label>Disposition</label><input id="f_disp"></div><div><label>Interaction Date</label><input id="f_cd" type="date" value="${t}"></div><div><label>Audit Date</label><input id="f_ad" type="date" value="${t}"></div><div><label>Auditor</label><input value="${e(m.name)} (${e(m.email)})" disabled></div></div></div>
+<div class="tw"><table><tr><th>Attribute / Sub-attribute</th><th>Max</th><th>Observation</th><th>Failure reason</th></tr>${PR[c].map((p,i)=>`<tr><td>${e(p.k)}</td><td>${p.max}</td><td><select id="o${i}" onchange="sc()"><option value="">Select</option>${p.opts.map(o=>`<option>${o}</option>`).join("")}</select></td><td><input id="r${i}" style="min-width:240px"></td></tr>`).join("")}</table></div>
+<div class="pan" style="margin-top:14px"><label>Remarks</label><textarea id="f_rem" rows="2"></textarea><p>Score: <b id="live">–</b></p><button id="sub" onclick="submitA('${c}')">SUBMIT</button> <button class="s" onclick="if(confirm('Clear this unsaved audit?'))render()">CLEAR</button><p class="err" id="aerr"></p></div>`}
+function readRes(c){const res={};PR[c].forEach((p,i)=>res[p.k]=[document.getElementById("o"+i).value,document.getElementById("r"+i).value.trim()]);return res}
+function sc(){const c=S.ch||Object.keys(P)[0],r=readRes(c);document.getElementById("live").textContent=PR[c].every(p=>r[p.k][0])?calc(c,r).score.toFixed(1)+"%":"–"}
+async function submitA(c){const g=i=>document.getElementById(i).value,er=document.getElementById("aerr"),b=document.getElementById("sub"),res=readRes(c);
+const ag=S.agents.find(x=>x.id===g("f_emp"));
+if(!ag||!g("f_tx").trim()||!g("f_svc")||!g("f_ad")){er.textContent="Agent, "+P[c].tx+", service line and audit date are mandatory.";return}
+if(PR[c].some(p=>!res[p.k][0])){er.textContent="Select an observation for every parameter.";return}
+const miss=PR[c].find(p=>{const o=res[p.k][0];return(o==="Fatal"||o==="N"||(+o<p.max&&!isNaN(+o)))&&!res[p.k][1]});
+if(miss){er.textContent="Failure reason is required for: "+miss.k;return}
+b.disabled=true;const k=calc(c,res),fr=[],nfr=[];
+PR[c].forEach(p=>{const o=res[p.k][0],r=p.k+": "+res[p.k][1];if(o==="Fatal")fr.push(r);else if(o!=="NA"&&o!=="Y"&&+o!==p.max&&res[p.k][1])nfr.push(r)});
+const id="A"+Date.now().toString(36).toUpperCase()+Math.random().toString(36).slice(2,5).toUpperCase();
+const a={id,ch:c,emp:ag.id,empName:ag.name,tl:ag.tl||"",tx:g("f_tx").trim(),svc:g("f_svc"),disp:g("f_disp"),callDate:g("f_cd"),auditDate:g("f_ad"),ts:Date.now(),auditor:S.me.name,aEmail:S.me.email,res,...k,fr:fr.join(" | "),nfr:nfr.join(" | "),rem:g("f_rem")};
+try{const o=await api("POST","/api/audit",{ch:c,emp:ag.id,tx:a.tx,svc:a.svc,disp:a.disp,callDate:a.callDate,auditDate:a.auditDate,res,rem:a.rem});await load();alert("Audit "+o.id+" submitted. Score: "+o.score.toFixed(1)+"%");S.view="raw";render()}catch(x){er.textContent="Could not save: "+x.message;b.disabled=false}}
+function cls(n,avg){const C=S.cfg;return!n?"—":n<C.min?"Insufficient":avg>=C.good?"Good":avg>=C.neu?"Neutral":"Bad"}
+function mx(){const m=S.me,ag=S.agents.filter(x=>x.active&&(m.role==="admin"||x.tl===m.email)),a=vis(),cell={};
+ag.forEach(g=>SL.forEach((s,i)=>{const b=a.filter(x=>x.emp===g.id&&x.svc===s),avg=b.length?b.reduce((t,x)=>t+x.score,0)/b.length:0;cell[g.id+"|"+i]={b,avg,c:cls(b.length,avg)}}));
+const cnt=k=>ag.filter(g=>SL.some((s,i)=>cell[g.id+"|"+i].c===k)).length;
+const sum=SL.map((s,i)=>{const L=ag.map(g=>cell[g.id+"|"+i]).filter(x=>x.b.length);return`<tr><td>${s}</td><td>${L.length}</td>${["Good","Neutral","Bad"].map(k=>`<td>${L.filter(x=>x.c===k).length}</td>`).join("")}<td>${L.length?(L.reduce((t,x)=>t+x.avg,0)/L.length).toFixed(1)+"%":"—"}</td></tr>`}).join("");
+window._mx=(id,i)=>{S.det=[id,i];render()};
+window._exm=()=>csv([["Emp ID","Emp Name",...SL],...ag.map(g=>[g.id,g.name,...SL.map((s,i)=>cell[g.id+"|"+i].c)])],"agent-service-line-matrix.csv");
+let d="";if(S.det){const[id,i]=S.det,x=cell[id+"|"+i],g=S.agents.find(y=>y.id===id),f=x.b.reduce((t,y)=>t+y.f,0),nf=x.b.reduce((t,y)=>t+y.nf,0),cn={};x.b.forEach(y=>(y.fr+" | "+y.nfr).split(" | ").filter(Boolean).forEach(r=>cn[r]=(cn[r]||0)+1));const top=Object.entries(cn).sort((p,q)=>q[1]-p[1])[0];
+d=`<div class="pan"><b>${e(g.id)} – ${e(g.name)} · ${SL[i]}</b> <button class="s" style="float:right" onclick="S.det=null;render()">Close</button><p>Audits: ${x.b.length} · Average: ${x.avg.toFixed(1)}% · Good ${x.b.filter(y=>y.score>=S.cfg.good).length} / Neutral ${x.b.filter(y=>y.score<S.cfg.good&&y.score>=S.cfg.neu).length} / Bad ${x.b.filter(y=>y.score<S.cfg.neu).length} · Fatal ${f} · Non-fatal ${nf}<br>Most common error: ${top?e(top[0])+" ("+top[1]+")":"None"}</p><div class="tw"><table><tr><th>Date</th><th>Channel</th><th>Transaction ID</th><th>Auditor</th><th>Score</th></tr>${x.b.map(y=>`<tr><td>${y.auditDate}</td><td>${y.ch}</td><td>${e(y.tx)}</td><td>${e(y.auditor)}</td><td>${y.score.toFixed(1)}%</td></tr>`).join("")}</table></div></div>`}
+const ad=m.role==="admin"?`<div class="pan row"><div><label>Good ≥ %</label><input id="cg" type="number" value="${S.cfg.good}"></div><div><label>Neutral ≥ %</label><input id="cn" type="number" value="${S.cfg.neu}"></div><div><label>Min audits for classification</label><input id="cm" type="number" min="1" value="${S.cfg.min}"></div><div style="flex:0"><button onclick="saveCfg()">Save</button></div></div>`:"";
+return`<h2>Agent × Service Line Performance Matrix</h2>${filt()}${ad}<div class="cards">${[["Total Agents",ag.length],["Agents with Good lines",cnt("Good")],["Agents with Neutral lines",cnt("Neutral")],["Agents with Bad lines",cnt("Bad")],["Service Lines Audited",SL.filter((s,i)=>ag.some(g=>cell[g.id+"|"+i].b.length)).length]].map(c=>`<div class="card"><b>${c[1]}</b><span>${c[0]}</span></div>`).join("")}</div>${d}
+<div class="row" style="margin-bottom:8px"><button onclick="_exm()">Export CSV</button></div>
+<div class="tw"><table class="mx"><tr><th>Emp ID</th><th>Emp Name</th>${SL.map(s=>`<th>${s}</th>`).join("")}</tr>${ag.map(g=>`<tr><td>${e(g.id)}</td><td>${e(g.name)}</td>${SL.map((s,i)=>{const c=cell[g.id+"|"+i].c;return`<td>${c==="—"?'<span class="pill NA">—</span>':c==="Insufficient"?`<span class="pill NA" onclick="_mx('${e(g.id)}',${i})">Insufficient Data</span>`:`<span class="pill ${c}" onclick="_mx('${e(g.id)}',${i})">${c}</span>`}</td>`}).join("")}</tr>`).join("")||`<tr><td colspan="20" class="mut">No agents available.</td></tr>`}</table></div>
+<h3>Service line summary</h3><div class="tw"><table><tr><th>Service Line</th><th>Agents Audited</th><th>Good</th><th>Neutral</th><th>Bad</th><th>Avg Quality</th></tr>${sum}</table></div>`}
+async function saveCfg(){const v=i=>+document.getElementById(i).value;await db.doc("settings/cfg").set({good:v("cg"),neu:v("cn"),min:Math.max(1,v("cm"))})}
+function agents(){return`<h2>Agent Master</h2><div class="pan"><div class="row"><div><label>Emp ID</label><input id="a_id"></div><div><label>Emp Name</label><input id="a_n"></div><div><label>Email ID</label><input id="a_e"></div><div><label>TL</label><select id="a_t"><option value="">Select TL</option>${S.users.filter(u=>u.role==="tl").map(u=>`<option value="${e(u.email)}">${e(u.name)}</option>`).join("")}</select></div><div style="flex:0"><button onclick="saveAgent()">Add / Update</button></div></div>
+<label>Bulk upload: copy 4 columns from Excel (Emp ID, Name, Email, TL email – no header row) and paste here</label><textarea id="a_b" rows="3"></textarea><button class="s" style="margin-top:6px" onclick="bulkAgents()">Import rows</button><p class="err" id="aerr"></p></div>
+<div class="tw"><table><tr><th>Emp ID</th><th>Name</th><th>Email</th><th>TL</th><th>Status</th><th></th></tr>${S.agents.map(g=>`<tr><td>${e(g.id)}</td><td>${e(g.name)}</td><td>${e(g.email)}</td><td>${e(g.tl)}</td><td>${g.active?"Active":"Inactive"}</td><td><button class="s" onclick="togAgent('${e(g.id)}')">${g.active?"Deactivate":"Activate"}</button></td></tr>`).join("")}</table></div>`}
+const okEm=s=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s);
+async function putAgent(id,n,em,tl){if(!id||!n||!okEm(em))throw new Error("Invalid row: "+id);const o=S.agents.find(x=>x.id===id);await db.doc("agents/"+sid(id)).set({id,name:n,email:em,tl,active:o?o.active:true})}
+async function saveAgent(){const g=i=>document.getElementById(i).value.trim();try{await putAgent(g("a_id"),g("a_n"),g("a_e"),g("a_t"))}catch(x){document.getElementById("aerr").textContent=x.message}}
+async function bulkAgents(){const L=document.getElementById("a_b").value.split("\n").map(l=>l.split(/\t|,/).map(s=>s.trim())).filter(r=>r[0]);let n=0,bad=[];for(const r of L){try{await putAgent(r[0],r[1],r[2],(r[3]||"").toLowerCase());n++}catch(x){bad.push(r[0])}}document.getElementById("aerr").textContent="Imported "+n+(bad.length?"; skipped: "+bad.join(", "):"")}
+async function togAgent(id){const g=S.agents.find(x=>x.id===id);await db.doc("agents/"+sid(id)).update({active:!g.active})}
+function users(){return`<h2>Access Management</h2><div class="pan"><p class="mut">Create logins for Auditors, Team Leaders and Admins.</p><div class="row"><div><label>Name</label><input id="u_n"></div><div><label>Email ID</label><input id="u_e"></div><div><label>Role</label><select id="u_r"><option value="auditor">Auditor</option><option value="tl">Team Leader</option><option value="admin">Admin</option></select></div><div><label>Temporary password</label><input id="u_p" type="text"></div></div>
+<label>Assigned channels (auditors)</label><div>${Object.keys(P).map(c=>`<label style="display:inline-block;margin-right:14px;color:var(--tx)"><input type="checkbox" class="uc" value="${c}" style="width:auto" checked> ${c}</label>`).join("")}</div><button style="margin-top:10px" onclick="addUser()">Create / Update User</button><p class="err" id="uerr"></p></div>
+<div class="tw"><table><tr><th>Name</th><th>Email</th><th>Role</th><th>Channels</th><th>Status</th><th></th></tr>${S.users.map(u=>`<tr><td>${e(u.name)}</td><td>${e(u.email)}</td><td>${u.role}</td><td>${e((u.ch||[]).join(", "))}</td><td>${u.active?"Active":"Disabled"}</td><td><button class="s" onclick="rpw('${e(u.email)}')">Reset password</button> ${u.email===S.me.email?"":`<button class="s" onclick="togUser('${e(u.email)}')">${u.active?"Disable":"Enable"}</button>`}</td></tr>`).join("")}</table></div>`}
+async function addUser(){const g=i=>document.getElementById(i).value.trim(),em=g("u_e").toLowerCase(),er=document.getElementById("uerr");
+if(!g("u_n")||!okEm(em)||g("u_p").length<8){er.textContent="Name, valid email and an 8+ character password are required.";return}
+const u={email:em,name:g("u_n"),role:g("u_r"),ch:[...document.querySelectorAll(".uc:checked")].map(x=>x.value),active:true,password:g("u_p")};await db.doc("users/"+sid(em)).set(u);er.textContent=""}
+async function togUser(em){const u=S.users.find(x=>x.email===em);await db.doc("users/"+sid(em)).update({active:!u.active})}
+(async()=>{CFGS=await api("GET","/api/config");SL=CFGS.serviceLines;P=CFGS.channels;PR={};for(const c in P)PR[c]=P[c].params;
+try{S.me=await api("GET","/api/me");await load()}catch(x){S.me=null}
+render();setInterval(()=>{if(S.me&&S.view!=="audit"&&!document.activeElement?.matches("input,select,textarea"))load().then(render).catch(()=>{})},20000)})();
+</script></body></html>
