@@ -3,6 +3,5 @@
     { "source": "/api/:path*", "destination": "/api/index" },
     { "source": "/auth/:path*", "destination": "/api/index" }
   ],
-  "functions": { "api/index.js": { "maxDuration": 30 } },
   "crons": [ { "path": "/api/cron/eod", "schedule": "30 16 * * *" } ]
 }
